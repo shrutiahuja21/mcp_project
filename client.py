@@ -8,7 +8,7 @@ from venv_bootstrap import ensure_project_venv, project_root
 ensure_project_venv()
 
 _ROOT = project_root()
-load_dotenv(_ROOT / ".env")
+load_dotenv(_ROOT / ".env", override=True)
 
 
 async def main() -> None:

@@ -20,7 +20,7 @@ from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, Tool
 from chat_assistant import build_mcp_agent
 
 _ROOT = Path(__file__).resolve().parent
-load_dotenv(_ROOT / ".env")
+load_dotenv(_ROOT / ".env", override=True)
 
 
 def _content_str(message: AIMessage | HumanMessage) -> str:

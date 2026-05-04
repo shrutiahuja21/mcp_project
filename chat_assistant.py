@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import sys
 from pathlib import Path
 
@@ -16,6 +17,15 @@ SYSTEM_PROMPT = (
     "Otherwise you may use add or multiply, but never nest one tool call inside "
     "another tool's arguments; use at most one tool per assistant turn."
 )
+
+
+def _groq_api_key() -> str:
+    api_key = os.getenv("GROQ_API_KEY", "").strip()
+    if api_key:
+        return api_key
+    raise RuntimeError(
+        "Missing Groq API key. Set GROQ_API_KEY in your environment or in `.env`."
+    )
 
 
 def mcp_connections(
@@ -49,5 +59,5 @@ async def build_mcp_agent(
 ):
     client = MultiServerMCPClient(mcp_connections(root, use_weather=use_weather, weather_url=weather_url))
     tools = await client.get_tools()
-    llm = ChatGroq(model=model)
+    llm = ChatGroq(model=model, api_key=_groq_api_key())
     return create_agent(llm, tools, system_prompt=SYSTEM_PROMPT)
