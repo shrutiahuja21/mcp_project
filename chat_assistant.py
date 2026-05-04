@@ -6,6 +6,7 @@ import os
 import sys
 from pathlib import Path
 
+from dotenv import load_dotenv
 from langchain.agents import create_agent
 from langchain_mcp_adapters.client import MultiServerMCPClient
 from langchain_groq import ChatGroq
@@ -19,7 +20,8 @@ SYSTEM_PROMPT = (
 )
 
 
-def _groq_api_key() -> str:
+def _groq_api_key(root: Path) -> str:
+    load_dotenv(root / ".env", override=True)
     api_key = os.getenv("GROQ_API_KEY", "").strip()
     if api_key:
         return api_key
@@ -59,5 +61,5 @@ async def build_mcp_agent(
 ):
     client = MultiServerMCPClient(mcp_connections(root, use_weather=use_weather, weather_url=weather_url))
     tools = await client.get_tools()
-    llm = ChatGroq(model=model, api_key=_groq_api_key())
+    llm = ChatGroq(model=model, api_key=_groq_api_key(root))
     return create_agent(llm, tools, system_prompt=SYSTEM_PROMPT)
