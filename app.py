@@ -2,7 +2,7 @@
 MCP chat assistant UI (Streamlit).
 
 Run from the project directory:
-  uv run streamlit run streamlit_app.py
+  uv run streamlit run app.py
 
 Start the weather MCP server separately if you enable it in the sidebar:
   uv run python weather.py
@@ -78,7 +78,7 @@ def main() -> None:
     with st.sidebar:
         st.subheader("Settings")
         model = st.text_input("Groq model", value="llama-3.3-70b-versatile")
-        use_weather = st.checkbox("Enable weather MCP", value=True)
+        use_weather = st.checkbox("Enable weather MCP", value=False)
         weather_url = st.text_input("Weather MCP URL", value="http://127.0.0.1:8000/mcp")
         if st.button("New chat"):
             st.session_state.pop("lc_messages", None)
@@ -91,7 +91,25 @@ def main() -> None:
     if "lc_messages" not in st.session_state:
         st.session_state.lc_messages = []
 
-    agent = _load_agent(model=model, use_weather=use_weather, weather_url=weather_url)
+    weather_enabled = use_weather
+    try:
+        agent = _load_agent(model=model, use_weather=use_weather, weather_url=weather_url)
+    except Exception as exc:
+        if use_weather:
+            st.warning(
+                "Weather MCP is unreachable. Falling back to math-only mode. "
+                "Start weather server and click 'Reconnect MCP' to re-enable it."
+            )
+            weather_enabled = False
+            agent = _load_agent(model=model, use_weather=False, weather_url=weather_url)
+        else:
+            st.error(f"Failed to initialize MCP agent: {exc}")
+            return
+
+    if weather_enabled:
+        st.caption(f"Weather MCP: connected to `{weather_url}`")
+    else:
+        st.caption("Weather MCP: disabled")
 
     for msg in st.session_state.lc_messages:
         _render_message(msg)
